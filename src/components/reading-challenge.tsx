@@ -5,7 +5,7 @@ import ProgressSummary from "@/components/progress-summary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { UseBibleChallengeReturn } from "@/hooks/use-bible-challenge";
-import { BookOpen, RefreshCw, Bookmark } from "lucide-react";
+import { BookOpen, RefreshCw, Bookmark, ArrowLeft, ArrowRight } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { BibleReader } from "./bible-reader";
 
 export default function ReadingChallenge({
   readingPlan,
@@ -24,10 +25,28 @@ export default function ReadingChallenge({
   toggleDay,
   stats,
   resetChallenge,
+  currentReadingIndex,
+  setCurrentReadingIndex
 }: UseBibleChallengeReturn) {
   
-  const currentDayIndex = stats.daysSinceStart < readingPlan.length ? stats.daysSinceStart : readingPlan.length -1;
-  const todaysReading = readingPlan[currentDayIndex];
+  const currentDayReading = readingPlan[currentReadingIndex];
+  const isCurrentDayCompleted = progress[currentReadingIndex]?.completed;
+
+  const handleNext = () => {
+    if (!isCurrentDayCompleted) {
+      toggleDay(currentReadingIndex);
+    }
+    if (currentReadingIndex < readingPlan.length - 1) {
+      setCurrentReadingIndex(currentReadingIndex + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentReadingIndex > 0) {
+      setCurrentReadingIndex(currentReadingIndex - 1);
+    }
+  };
+
 
   return (
     <div className="min-h-screen w-full bg-background">
@@ -77,19 +96,41 @@ export default function ReadingChallenge({
                 </CardHeader>
                 <CardContent>
                     <p className="text-3xl font-bold text-primary font-headline">
-                        {todaysReading?.reading || "Challenge Complete!"}
+                        {readingPlan[stats.daysSinceStart]?.reading || "Challenge Complete!"}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                        Day {todaysReading?.day || stats.totalDays} of {stats.totalDays}
+                        Day {readingPlan[stats.daysSinceStart]?.day || stats.totalDays} of {stats.totalDays}
                     </p>
                 </CardContent>
              </Card>
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl">
+                  Reading for Day {currentDayReading?.day || ''}: {currentDayReading?.reading || "Challenge Complete!"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BibleReader passage={currentDayReading?.reading} />
+                <div className="mt-4 flex justify-between">
+                  <Button variant="outline" onClick={handlePrevious} disabled={currentReadingIndex === 0}>
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Previous
+                  </Button>
+                  <Button onClick={handleNext} disabled={currentReadingIndex >= readingPlan.length - 1 && isCurrentDayCompleted}>
+                    {isCurrentDayCompleted ? 'Next' : 'Mark as Read & Next'}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="font-headline text-2xl">Your Reading Grid</CardTitle>
-                <CardContent className="p-0 pt-4">
+              </CardHeader>
+              <CardContent className="p-6 pt-4">
                   <ProgressGrid
                     readingPlan={readingPlan}
                     progress={progress}
@@ -110,8 +151,7 @@ export default function ReadingChallenge({
                           <span>Complete</span>
                       </div>
                   </div>
-                </CardContent>
-              </CardHeader>
+              </CardContent>
             </Card>
           </div>
         </div>
