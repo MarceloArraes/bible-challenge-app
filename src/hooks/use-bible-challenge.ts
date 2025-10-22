@@ -168,20 +168,19 @@ export function useBibleChallenge(): UseBibleChallengeReturn {
     const totalDays = readingPlan.length;
     const percentComplete = totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
     
-    const daysSinceStartForPace = Math.max(daysSinceStart, 1);
-    const pace = completedDays / daysSinceStartForPace;
+    const daysPassed = Math.max(daysSinceStart, 0) + 1;
+    const pace = completedDays / daysPassed;
     const remainingDaysToRead = totalDays - completedDays;
     
     let estimatedDaysToFinish;
     if (pace > 0) {
       estimatedDaysToFinish = remainingDaysToRead / pace;
     } else {
-      // If no progress yet, assume they'll follow the plan's original duration
       const originalDurationInDays = readingPlan.length;
       estimatedDaysToFinish = originalDurationInDays - daysSinceStart;
     }
 
-    const estimatedEndDate = addDays(today, Math.max(0, estimatedDaysToFinish));
+    const estimatedEndDate = addDays(today, Math.ceil(estimatedDaysToFinish));
 
     return {
       percentComplete,
