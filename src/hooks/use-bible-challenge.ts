@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { generateReadingPlan } from '@/lib/plan-generator';
 import { differenceInDays, addDays } from 'date-fns';
 import { useToast } from './use-toast';
@@ -54,15 +54,7 @@ export function useBibleChallenge(): UseBibleChallengeReturn {
   const [progress, setProgress] = useState<Progress[]>([]);
   const [currentReadingIndex, setCurrentReadingIndexState] = useState(0);
   const { toast } = useToast();
-  const toastToShow = useRef<Parameters<typeof toast>[0] | null>(null);
-
-  useEffect(() => {
-    if (toastToShow.current) {
-      toast(toastToShow.current);
-      toastToShow.current = null;
-    }
-  }, [progress, challenge, toast]);
-
+  
   useEffect(() => {
     try {
       const savedChallenge = localStorage.getItem(CHALLENGE_KEY);
@@ -122,11 +114,11 @@ export function useBibleChallenge(): UseBibleChallengeReturn {
     localStorage.setItem(PROGRESS_KEY, JSON.stringify(newProgress));
     localStorage.setItem(CURRENT_INDEX_KEY, '0');
 
-    toastToShow.current = {
+    toast({
         title: "Challenge Started!",
         description: `Your ${duration}-month reading plan has begun.`
-    };
-  }, []);
+    });
+  }, [toast]);
 
   const toggleDay = useCallback((dayIndex: number) => {
     setProgress(currentProgress => {
@@ -143,15 +135,15 @@ export function useBibleChallenge(): UseBibleChallengeReturn {
       localStorage.setItem(PROGRESS_KEY, JSON.stringify(newProgress));
 
       if (!wasCompleted) {
-        toastToShow.current = {
+        toast({
             title: `Day ${dayToggled.day} Complete!`,
             description: "Great job on your progress!",
-        }
+        })
       }
 
       return newProgress;
     });
-  }, []);
+  }, [toast]);
   
   const resetChallenge = useCallback(() => {
     setChallenge(null);
@@ -160,41 +152,52 @@ export function useBibleChallenge(): UseBibleChallengeReturn {
     localStorage.removeItem(CHALLENGE_KEY);
     localStorage.removeItem(PROGRESS_KEY);
     localStorage.removeItem(CURRENT_INDEX_KEY);
-    toastToShow.current = {
+    toast({
         title: "Challenge Reset",
         description: "You can start a new challenge anytime."
-    };
-  }, []);
+    });
+  }, [toast]);
 
   const stats = useMemo((): Stats => {
-    if (!challenge) {
+    if (!challenge || readingPlan.length === 0) {
       return { percentComplete: 0, estimatedEndDate: new Date(), daysSinceStart: 0, totalDays: 0 };
     }
+    
     const startDate = new Date(challenge.startDate);
     const today = new Date();
-    const daysSinceStart = differenceInDays(today, startDate);
+    today.setHours(0, 0, 0, 0);
+
+    const daysSinceStart = Math.max(0, differenceInDays(today, startDate));
     const completedDays = progress.filter(p => p.completed).length;
     const totalDays = readingPlan.length;
     const percentComplete = totalDays > 0 ? (completedDays / totalDays) * 100 : 0;
-    
-    const daysPassed = Math.max(daysSinceStart, 0) + 1;
-    const pace = completedDays / daysPassed;
-    const remainingDaysToRead = totalDays - completedDays;
-    
-    let estimatedDaysToFinish;
-    if (completedDays > 0 && pace > 0) {
-      estimatedDaysToFinish = remainingDaysToRead / pace;
-    } else {
-      const originalDurationInDays = readingPlan.length;
-      estimatedDaysToFinish = originalDurationInDays - daysSinceStart;
-    }
 
-    const estimatedEndDate = addDays(today, Math.ceil(estimatedDaysToFinish));
+    let estimatedEndDate;
+    const remainingReadings = totalDays - completedDays;
+
+    if (remainingReadings <= 0) {
+      // Challenge is complete
+      const lastCompletionDate = progress
+        .filter(p => p.completed && p.dateCompleted)
+        .reduce((latest, p) => {
+            const d = new Date(p.dateCompleted!);
+            return d > latest ? d : latest;
+        }, new Date(0));
+      estimatedEndDate = lastCompletionDate > new Date(0) ? lastCompletionDate : today;
+    } else if (completedDays === 0) {
+      // No progress yet, assume they start today and follow the plan
+      estimatedEndDate = addDays(today, totalDays - daysSinceStart -1);
+    } else {
+      const daysPassed = daysSinceStart + 1;
+      const pace = completedDays / daysPassed; // readings per day
+      const remainingDaysToFinish = remainingReadings / pace;
+      estimatedEndDate = addDays(today, Math.ceil(remainingDaysToFinish));
+    }
 
     return {
       percentComplete,
       estimatedEndDate,
-      daysSinceStart: daysSinceStart < 0 ? 0 : daysSinceStart,
+      daysSinceStart,
       totalDays,
     };
   }, [challenge, progress, readingPlan]);
