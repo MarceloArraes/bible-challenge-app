@@ -10,6 +10,16 @@ interface BibleReaderProps {
   passage: string | undefined;
 }
 
+interface Verse {
+  
+    book_id: string;
+    book_name: string
+    chapter: number;
+    verse: number;
+    text: string;
+
+}
+
 interface PassageText {
   bookname: string;
   chapter: string;
@@ -32,7 +42,7 @@ export function BibleReader({ passage }: BibleReaderProps) {
       setError(null);
       setText(null);
       try {
-        const response = await fetch(`https://bible-api.com/${passage}`);
+        const response = await fetch(`https://bible-api.com/${passage}?translation=kjv`);
         if (!response.ok) {
           throw new Error(`Failed to fetch passage. Status: ${response.status}`);
         }
@@ -41,23 +51,23 @@ export function BibleReader({ passage }: BibleReaderProps) {
           throw new Error(data.error);
         }
         
-        // The API returns either a single object or an array for multi-chapter requests
-        const verses = Array.isArray(data) ? data : (data.verses ? [data] : []);
+        const verses = data.verses;
 
-        const groupedByChapter = verses.reduce((acc, verse) => {
+        const groupedByChapter = verses.reduce((acc: PassageText[], verse: Verse) => {
             const chapterNum = verse.chapter;
             if (!acc[chapterNum]) {
                 acc[chapterNum] = {
                     bookname: verse.book_name,
-                    chapter: chapterNum,
+                    chapter: chapterNum.toString(),
                     text: ''
                 };
             }
-            acc[chapterNum].text += `  ${verse.verse} ${verse.text}`;
+            acc[chapterNum].text += `${verse.verse} ${verse.text}`;
+            
             return acc;
         }, {} as Record<string, PassageText>);
 
-        const result = Object.values(groupedByChapter);
+        const result = Object.values(groupedByChapter) as PassageText[];
         
         setText(result);
 
