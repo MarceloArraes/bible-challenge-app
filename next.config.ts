@@ -30,6 +30,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  reactStrictMode: true,
 };
+
+const withPWA = require('next-pwa')({
+  dest: 'public', // The destination directory for the service worker files
+  register: true, // Automatically register the service worker
+  skipWaiting: true, // Install new service worker as soon as it's available
+  disable: process.env.NODE_ENV === 'development', // Disable PWA in development to avoid caching issues
+});
+
+// Export the wrapped config
+module.exports = withPWA(nextConfig);
 
 export default nextConfig;
