@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useBibleChallenge } from "@/hooks/use-bible-challenge";
 
 interface BibleReaderProps {
   passage: string | undefined;
@@ -30,7 +31,12 @@ export function BibleReader({ passage }: BibleReaderProps) {
   const [text, setText] = useState<PassageText[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const {readingPlan, currentReadingIndex, stats} = useBibleChallenge();
+  console.log('readingPlan, currentReadingIndex, stats',readingPlan, currentReadingIndex, stats);
+  const currentDayReading = readingPlan[stats.daysSinceStart];
+  console.log('currentDayReading', currentDayReading);
+  console.log('readingPlan[stats.daysSinceStart]?.reading', readingPlan[stats.daysSinceStart]?.reading);
+  console.log('passage',passage);
   useEffect(() => {
     if (!passage) {
       setText(null);
