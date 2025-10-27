@@ -26,6 +26,8 @@ export interface Progress {
 export interface ReadingDay {
   day: number;
   reading: string;
+  books: string;
+  chapters: string;
 }
 
 export interface Stats {
@@ -74,10 +76,10 @@ export function useBibleChallenge(): UseBibleChallengeReturn {
           setProgress(plan.map(day => ({ day: day.day, completed: false, dateCompleted: null })));
         }
 
-        const startDate = new Date(parsedChallenge.startDate);
-        const today = new Date();
-        const daysSinceStart = differenceInDays(today, startDate);
-        const initialIndex = savedIndex ? parseInt(savedIndex, 10) : (daysSinceStart >= 0 ? daysSinceStart : 0);
+        // const startDate = new Date(parsedChallenge.startDate);
+        // const today = new Date();
+        // const daysSinceStart = differenceInDays(today, startDate);
+        const initialIndex = savedIndex ? Number(savedIndex) : 0;
         setCurrentReadingIndexState(initialIndex);
 
       }

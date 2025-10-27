@@ -9,6 +9,8 @@ import { useBibleChallenge } from "@/hooks/use-bible-challenge";
 
 interface BibleReaderProps {
   passage: string | undefined;
+  books: string 
+  chapters: string
 }
 
 interface Verse {
@@ -27,16 +29,33 @@ interface PassageText {
   text: string;
 }
 
-export function BibleReader({ passage }: BibleReaderProps) {
+const chapterBreaker = (books: string, chapters:string) => {
+
+  const allCHaps = []
+
+  for(let i=parseInt(chapters.split(' ')[0]); i<=parseInt(chapters.split(' ')[1]); i++){
+    allCHaps.push(i);
+  }
+  return `${books} ${allCHaps.join('-')}`
+}
+
+export function BibleReader({ passage, books, chapters }: BibleReaderProps) {
   const [text, setText] = useState<PassageText[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const {readingPlan, currentReadingIndex, stats} = useBibleChallenge();
-  console.log('readingPlan, currentReadingIndex, stats',readingPlan, currentReadingIndex, stats);
+  console.log('readingPlan, currentReadingIndex, ',readingPlan, currentReadingIndex);
+  console.log('stats',stats);
   const currentDayReading = readingPlan[stats.daysSinceStart];
   console.log('currentDayReading', currentDayReading);
   console.log('readingPlan[stats.daysSinceStart]?.reading', readingPlan[stats.daysSinceStart]?.reading);
   console.log('passage',passage);
+
+  const allChaps = chapterBreaker(books, chapters)
+
+  console.log('allChaps', allChaps);
+  
+
   useEffect(() => {
     if (!passage) {
       setText(null);
@@ -48,7 +67,7 @@ export function BibleReader({ passage }: BibleReaderProps) {
       setError(null);
       setText(null);
       try {
-        const response = await fetch(`https://bible-api.com/${passage}?translation=kjv`);
+        const response = await fetch(`https://bible-api.com/${allChaps}?translation=kjv`);
         if (!response.ok) {
           throw new Error(`Failed to fetch passage. Status: ${response.status}`);
         }

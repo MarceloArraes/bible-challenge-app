@@ -36,16 +36,25 @@ export function generateReadingPlan(duration: Duration): ReadingDay[] {
       const last = todaysChapters[todaysChapters.length - 1];
       
       let readingString: string;
+      let chapters: string;
+      let books: string;
       if (first.book === last.book) {
         if (first.chapter === last.chapter) {
           readingString = `${first.book} ${first.chapter}`;
+          chapters=`${first.chapter}`;
+          books=`${first.book}`;
         } else {
           readingString = `${first.book} ${first.chapter}-${last.chapter}`;
+          chapters=`${first.chapter} ${last.chapter}`;
+          books=`${first.book}`;
+
         }
       } else {
         readingString = `${first.book} ${first.chapter} - ${last.book} ${last.chapter}`;
+        chapters=`${first.chapter} ${last.chapter}`;
+        books=`${first.book} ${last.book}`;
       }
-      plan.push({ day, reading: readingString });
+      plan.push({ day, reading: readingString, books, chapters });
     }
     chapterIndex += chaptersPerDay;
   }
