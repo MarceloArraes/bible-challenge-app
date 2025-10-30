@@ -1,4 +1,4 @@
-# **App Name**: Bible Sprint
+# **App Name**: Bible Challenge
 
 ## Core Features:
 

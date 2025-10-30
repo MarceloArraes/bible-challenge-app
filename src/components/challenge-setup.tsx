@@ -24,7 +24,7 @@ export default function ChallengeSetup({ startChallenge }: ChallengeSetupProps) 
         <div className="mb-4 flex items-center justify-center gap-4">
           <BookOpen className="h-12 w-12 text-primary" />
           <h1 className="font-headline text-5xl font-bold tracking-tighter sm:text-6xl">
-            Bible Sprint
+            Bible Challenge
           </h1>
         </div>
         <p className="mx-auto max-w-2xl text-lg text-muted-foreground">

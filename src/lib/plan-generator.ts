@@ -31,24 +31,12 @@ export function generateReadingPlan(duration: Duration): ReadingDay[] {
     const endIndex = Math.floor(chapterIndex + chaptersPerDay);
 
     const todaysChapters = allChapters.slice(startIndex, endIndex);
-    // aqui eu tenho no primeiro index o primeiro livro e primeiro capitulo.
-    // ultimo index o ultimo livro com o ultimo capitulo.
-    // [{book: 1 timothy, chapters: 1,2,3,4},{book: titus: chapters:1}]
-
-    /* 
-    : {
-    book: string;
-    chapter: number;
-    }[]
-    */
 
     const grouped  = todaysChapters.reduce<Record<string, number[]>>((acc, { book, chapter }) => {
       if (!acc[book]) acc[book] = [];
       acc[book].push(chapter);
       return acc;
     }, {});
-
-    console.log('grouped ', grouped );
 
     if (todaysChapters.length > 0) {
       const first = todaysChapters[0];
@@ -65,13 +53,10 @@ export function generateReadingPlan(duration: Duration): ReadingDay[] {
         if (first.chapter === last.chapter) {
           readingString = `${first.book} ${first.chapter}`;
           chapters=`${first.chapter}`;
-          // booksAndChapters[`${first.book}`].push(first.chapter);
         } else {
-          // booksAndChapters[`${first.book}`].push(chapterFatorial(first.chapter, last.chapter));
 
           readingString = `${first.book} ${first.chapter}-${last.chapter}`;
           chapters=`${first.chapter} ${last.chapter}`;
-          // const chapters2=chapterFatorial(first.chapter, last.chapter);
         }
       } else {
         readingString = `${first.book} ${first.chapter} - ${last.book} ${last.chapter}`;

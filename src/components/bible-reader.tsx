@@ -42,7 +42,7 @@ export function BibleReader({ passage, booksAndChapters }: BibleReaderProps) {
   const [error, setError] = useState<string | null>(null);
   const { readingPlan, stats } = useBibleChallenge();
 
-  const currentDayReading = readingPlan?.[stats?.daysSinceStart];
+  // const currentDayReading = readingPlan?.[stats?.daysSinceStart];
 
   useEffect(() => {
     if (!booksAndChapters || booksAndChapters.length === 0) {
@@ -83,7 +83,7 @@ export function BibleReader({ passage, booksAndChapters }: BibleReaderProps) {
                 text: "",
               };
             }
-            acc[key].text += `\n${verse.verse} ${verse.text.trim()} `;
+            acc[key].text += `\n${verse.verse} ${verse.text}`;
             return acc;
           },
           {}

@@ -55,7 +55,7 @@ export default function ReadingChallenge({
           <div className="flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-primary" />
             <h1 className="font-headline text-2xl font-bold">
-              Bible Sprint
+              Bible Challenge
             </h1>
           </div>
           <AlertDialog>
@@ -83,8 +83,8 @@ export default function ReadingChallenge({
           </AlertDialog>
         </div>
       </header>
-      <main className="container mx-auto p-4 md:p-8">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <main className="container mx-auto p-4 md:p-4">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
           <div className="space-y-8 lg:col-span-1">
             <ProgressSummary stats={stats} />
              <Card>
@@ -104,7 +104,7 @@ export default function ReadingChallenge({
                 </CardContent>
              </Card>
           </div>
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-3 space-y-8">
             <Card>
               <CardHeader>
                 <CardTitle className="font-headline text-2xl">
