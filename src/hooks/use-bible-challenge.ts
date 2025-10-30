@@ -26,8 +26,9 @@ export interface Progress {
 export interface ReadingDay {
   day: number;
   reading: string;
-  books: string;
+  books: string[];
   chapters: string;
+  booksAndChapters: { book: string; chapter: number[] }[]
 }
 
 export interface Stats {

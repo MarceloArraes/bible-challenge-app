@@ -112,7 +112,7 @@ export default function ReadingChallenge({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <BibleReader passage={currentDayReading?.reading } books={currentDayReading?.books} chapters={currentDayReading.chapters} />
+                <BibleReader passage={currentDayReading?.reading } booksAndChapters={currentDayReading?.booksAndChapters} />
                 <div className="mt-4 flex justify-between">
                   <Button variant="outline" onClick={handlePrevious} disabled={currentReadingIndex === 0}>
                     <ArrowLeft className="mr-2 h-4 w-4" />

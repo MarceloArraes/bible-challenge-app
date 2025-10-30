@@ -8,19 +8,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useBibleChallenge } from "@/hooks/use-bible-challenge";
 
 interface BibleReaderProps {
-  passage: string | undefined;
-  books: string 
-  chapters: string
+  passage?: string;
+  booksAndChapters: { book: string; chapter: number[] }[];
 }
 
 interface Verse {
-  
-    book_id: string;
-    book_name: string
-    chapter: number;
-    verse: number;
-    text: string;
-
+  book_id: string;
+  book_name: string;
+  chapter: number;
+  verse: number;
+  text: string;
 }
 
 interface PassageText {
@@ -29,92 +26,88 @@ interface PassageText {
   text: string;
 }
 
-const chapterBreaker = (books: string, chapters:string) => {
-
-  const allCHaps = []
-
-  for(let i=parseInt(chapters.split(' ')[0]); i<=parseInt(chapters.split(' ')[1]); i++){
+const chapterFatorial = (first:number, last:number) =>{
+    const allCHaps = []
+    
+  for(let i=first; i<=last; i++){
     allCHaps.push(i);
   }
-  return `${books} ${allCHaps.join('-')}`
-}
+  return `${allCHaps.join('-')}`
 
-export function BibleReader({ passage, books, chapters }: BibleReaderProps) {
+  }
+
+export function BibleReader({ passage, booksAndChapters }: BibleReaderProps) {
   const [text, setText] = useState<PassageText[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const {readingPlan, currentReadingIndex, stats} = useBibleChallenge();
-  console.log('readingPlan, currentReadingIndex, ',readingPlan, currentReadingIndex);
-  console.log('stats',stats);
-  const currentDayReading = readingPlan[stats.daysSinceStart];
-  console.log('currentDayReading', currentDayReading);
-  console.log('readingPlan[stats.daysSinceStart]?.reading', readingPlan[stats.daysSinceStart]?.reading);
-  console.log('passage',passage);
+  const { readingPlan, stats } = useBibleChallenge();
 
-  const allChaps = chapterBreaker(books, chapters)
-
-  console.log('allChaps', allChaps);
-  
+  const currentDayReading = readingPlan?.[stats?.daysSinceStart];
 
   useEffect(() => {
-    if (!passage) {
+    if (!booksAndChapters || booksAndChapters.length === 0) {
       setText(null);
       return;
     }
 
-    const fetchPassage = async () => {
-      setIsLoading(true);
-      setError(null);
-      setText(null);
+    const fetchPassages = async () => {
       try {
-        const response = await fetch(`https://bible-api.com/${allChaps}?translation=kjv`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch passage. Status: ${response.status}`);
-        }
-        const data = await response.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        
-        const verses = data.verses;
+        setIsLoading(true);
+        setError(null);
 
-        const groupedByChapter = verses.reduce((acc: PassageText[], verse: Verse) => {
-            const chapterNum = verse.chapter;
-            if (!acc[chapterNum]) {
-                acc[chapterNum] = {
-                    bookname: verse.book_name,
-                    chapter: chapterNum.toString(),
-                    text: ''
-                };
+        // Build all requests
+        const requests = booksAndChapters.map(({ book, chapter }) => {
+          const range =
+            chapter.length > 1
+              ? chapterFatorial(chapter[0], chapter[chapter.length - 1])
+              : `${chapter[0]}`;
+          const url = `https://bible-api.com/${encodeURIComponent(
+            `${book} ${range}`
+          )}?translation=kjv`;
+          return fetch(url).then((res) => res.json());
+        });
+
+        const results = await Promise.all(requests);
+
+        // Merge all verses into a single array
+        const allVerses: Verse[] = results.flatMap((r) => r.verses ?? []);
+
+        // Group verses by book+chapter
+        const groupedByChapter = allVerses.reduce<Record<string, PassageText>>(
+          (acc, verse) => {
+            const key = `${verse.book_name}-${verse.chapter}`;
+            if (!acc[key]) {
+              acc[key] = {
+                bookname: verse.book_name,
+                chapter: verse.chapter.toString(),
+                text: "",
+              };
             }
-            acc[chapterNum].text += `${verse.verse} ${verse.text}`;
-            
+            acc[key].text += `\n${verse.verse} ${verse.text.trim()} `;
             return acc;
-        }, {} as Record<string, PassageText>);
+          },
+          {}
+        );
 
-        const result = Object.values(groupedByChapter) as PassageText[];
-        
-        setText(result);
-
+        const groupedArray = Object.values(groupedByChapter);
+        setText(groupedArray);
       } catch (err: any) {
-        setError(err.message || "An unknown error occurred.");
+        console.error(err);
+        setError("Failed to load passages.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPassage();
-  }, [passage]);
+    fetchPassages();
+  }, [booksAndChapters]);
 
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-8 w-1/4" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-5/6" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
+        {[...Array(6)].map((_, i) => (
+          <Skeleton key={i} className="h-4 w-full" />
+        ))}
       </div>
     );
   }
@@ -128,9 +121,13 @@ export function BibleReader({ passage, books, chapters }: BibleReaderProps) {
       </Alert>
     );
   }
-  
+
   if (!text || text.length === 0) {
-    return <p className="text-center text-muted-foreground">Select a reading to begin.</p>;
+    return (
+      <p className="text-center text-muted-foreground">
+        Select a reading to begin.
+      </p>
+    );
   }
 
   return (
